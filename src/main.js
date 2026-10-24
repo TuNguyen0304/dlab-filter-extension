@@ -1,39 +1,49 @@
 // Điểm khởi động: nối các module lại với nhau.
 (async function main() {
   if (window.top !== window) return;
-  if (document.getElementById('dlab-host')) return; // chống inject lặp
+  if (document.getElementById('dlab-host')) return;
 
   if (!document.body) {
     await new Promise((r) => document.addEventListener('DOMContentLoaded', r, { once: true }));
   }
 
-  // CSS ẩn hàng theo bộ lọc
   const pageStyle = document.createElement('style');
   pageStyle.id = 'dlab-page-style';
   pageStyle.textContent = DLAB.styles.page;
   (document.head || document.documentElement).appendChild(pageStyle);
 
-  // Nạp trạng thái và tùy chỉnh đã lưu
   DLAB.state = await DLAB.storage.load();
   DLAB.settings = await DLAB.storage.loadSettings();
 
-  // Dựng panel
   const ui = DLAB.createPanel();
   ui.setScale(DLAB.settings.scale);
   ui.setLayout(DLAB.state.layout);
   ui.setFilter(DLAB.state.filter);
+  
+  if (!DLAB.settings.enabled) {
+    ui.host.style.display = 'none';
+  }
+
   const pos = DLAB.state.pos;
   if (pos && typeof pos.x === 'number' && typeof pos.y === 'number') {
     DLAB.position.set(ui.host, pos.x, pos.y);
   }
   document.body.appendChild(ui.host);
-  DLAB.position.clamp(ui.host);
+  
+  // SỬA LỖI: Chỉ tính toán lại tọa độ khi panel đang hiển thị
+  if (DLAB.settings.enabled) {
+    DLAB.position.clamp(ui.host);
+  }
 
-  // Bộ lọc
   function applyFilter(id) {
     if (!DLAB.config.FILTERS.some((f) => f.id === id)) id = 'all';
     DLAB.state.filter = id;
-    document.body.setAttribute('data-dlab-filter', id);
+    
+    if (DLAB.settings.enabled) {
+      document.body.setAttribute('data-dlab-filter', id);
+    } else {
+      document.body.removeAttribute('data-dlab-filter');
+    }
     ui.setFilter(id);
   }
   applyFilter(DLAB.state.filter);
@@ -45,8 +55,6 @@
     DLAB.storage.save();
   });
 
-  // Đổi chiều dọc/ngang
-  // Lấy chính nút đổi chiều làm tâm xoay: nút đứng yên dưới con trỏ chuột
   ui.layoutBtn.addEventListener('click', () => {
     DLAB.position.keepAnchor(ui.host, ui.layoutBtn, () => {
       DLAB.state.layout = DLAB.state.layout === 'vertical' ? 'horizontal' : 'vertical';
@@ -55,18 +63,30 @@
     DLAB.storage.save();
   });
 
-  // Áp dụng ngay khi người dùng chỉnh kích thước trong popup
   DLAB.storage.watchSettings((settings) => {
     DLAB.settings = settings;
     ui.setScale(settings.scale);
-    DLAB.position.clamp(ui.host);
+
+    // SỬA LỖI: Phải hiển thị panel lên TRƯỚC
+    if (settings.enabled) {
+      ui.host.style.display = '';
+      document.body.setAttribute('data-dlab-filter', DLAB.state.filter);
+    } else {
+      ui.host.style.display = 'none';
+      document.body.removeAttribute('data-dlab-filter');
+    }
+
+    // SAU ĐÓ mới cập nhật lại vị trí (tránh việc tọa độ bị hiểu nhầm là 0,0 khi đang ẩn)
+    if (settings.enabled) {
+      DLAB.position.clamp(ui.host);
+    }
   });
 
-  // Kéo thả toàn khung
   DLAB.enableDrag(ui, () => DLAB.storage.save());
-  window.addEventListener('resize', () => DLAB.position.clamp(ui.host));
+  window.addEventListener('resize', () => {
+    if (DLAB.settings.enabled) DLAB.position.clamp(ui.host);
+  });
 
-  // Quét bảng
   DLAB.scanner.start((counts) => {
     ui.setCounts(counts);
     DLAB.theme.apply(ui.panel);

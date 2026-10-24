@@ -1,5 +1,4 @@
-// Đọc / ghi trạng thái (vị trí, chiều, bộ lọc) và tùy chỉnh (kích thước).
-// Ưu tiên chrome.storage.local, fallback sang localStorage.
+// Đọc / ghi trạng thái và tùy chỉnh.
 (() => {
   const { STORAGE_KEY, SETTINGS_KEY, DEFAULT_STATE, DEFAULT_SETTINGS, SCALE_MIN, SCALE_MAX } = DLAB.config;
   const hasChrome = typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local;
@@ -29,16 +28,15 @@
     const out = Object.assign({}, DEFAULT_SETTINGS, s || {});
     const n = Number(out.scale);
     out.scale = Number.isFinite(n) ? Math.min(SCALE_MAX, Math.max(SCALE_MIN, n)) : DEFAULT_SETTINGS.scale;
+    // [CẬP NHẬT] Đảm bảo biến enabled là kiểu Boolean (nếu không có thì lấy mặc định)
+    out.enabled = typeof out.enabled === 'boolean' ? out.enabled : DEFAULT_SETTINGS.enabled;
     return out;
   }
 
   DLAB.storage = {
     load: () => readKey(STORAGE_KEY, DEFAULT_STATE),
     save: () => writeKey(STORAGE_KEY, DLAB.state),
-
     loadSettings: () => readKey(SETTINGS_KEY, DEFAULT_SETTINGS).then(cleanSettings),
-
-    // Nghe thay đổi từ popup để áp dụng ngay, không cần tải lại trang
     watchSettings(callback) {
       if (!hasChrome || !chrome.storage.onChanged) return;
       chrome.storage.onChanged.addListener((changes, area) => {
