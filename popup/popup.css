@@ -1,0 +1,16 @@
+:root { --bg: #fff; --text: #222; --muted: #6c757d; --border: #ccc; --btn: #f1f1f1; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #212529; --text: #f8f9fa; --muted: #adb5bd; --border: #555; --btn: #343a40; }
+}
+body { width: 260px; margin: 0; padding: 12px 14px; background: var(--bg); color: var(--text); font: 13px system-ui, sans-serif; }
+h1 { font-size: 14px; margin: 0 0 10px; }
+.row { display: flex; align-items: center; gap: 10px; }
+input[type="range"] { flex: 1; }
+output { min-width: 42px; text-align: right; font-weight: 700; }
+.actions { display: flex; gap: 6px; margin-top: 10px; }
+.actions button {
+  flex: 1; padding: 5px 0; cursor: pointer; font: inherit; color: var(--text);
+  background: var(--btn); border: 1px solid var(--border); border-radius: 6px;
+}
+.actions button:hover { filter: brightness(.95); }
+.hint { margin: 10px 0 0; color: var(--muted); font-size: 12px; }

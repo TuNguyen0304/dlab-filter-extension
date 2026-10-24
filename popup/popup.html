@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css">
+  <title>DLAB Filter</title>
+</head>
+<body>
+  <h1>Kích thước bộ lọc</h1>
+
+  <div class="row">
+    <input id="scale" type="range" min="70" max="160" step="5" value="100" aria-label="Kích thước bộ lọc">
+    <output id="value" for="scale">100%</output>
+  </div>
+
+  <div class="actions">
+    <button id="minus" type="button" aria-label="Giảm">−</button>
+    <button id="reset" type="button">Mặc định</button>
+    <button id="plus" type="button" aria-label="Tăng">+</button>
+  </div>
+
+  <p class="hint">Thay đổi được áp dụng ngay trên trang đang mở.</p>
+
+  <script src="popup.js"></script>
+</body>
+</html>
